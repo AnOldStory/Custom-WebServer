@@ -127,7 +127,7 @@ int parseContentType(char *directory, char *msg, int newsockfd)
    {
       /* parse ext */
       char *temp = strdup(directory); // strcpy(malloc(1+strlen(directory)), directory);
-      *temp = strtok(temp, ".");
+      temp = strtok(temp, ".");
       char *file_ext = temp;
       while ((temp = strtok(NULL, ".")) != NULL)
       {
