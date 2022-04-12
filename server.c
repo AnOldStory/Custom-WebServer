@@ -22,7 +22,7 @@ int appendFile(char *directory, char *msg, int newsockfd)
    if (file)
    {
       fseek(file, 0, SEEK_END);
-      int file_size = ftell(file);
+      int file_size = ftell(file); // get file size
       fseek(file, 0, SEEK_SET);
 
       strcat(msg, "\n");
@@ -30,15 +30,15 @@ int appendFile(char *directory, char *msg, int newsockfd)
       char *response = (char *)malloc(strlen(msg) + file_size);
       memcpy(response, msg, strlen(msg) + 1);
 
-      int read = 0;
+      int read = 0; // file count
       while (1)
       {
-         unsigned char buff[file_size + 1];
+         unsigned char buff[file_size + 1]; // temp buff
          bzero(buff, file_size + 1);
-         int n = fread(buff, sizeof(char), file_size, file);
+         int n = fread(buff, sizeof(char), file_size, file); // read file
 
          if (n > 0)
-            memcpy(response + strlen(response) + read, buff, sizeof(char) * file_size);
+            memcpy(response + strlen(response) + read, buff, sizeof(char) * file_size); // append to response
          read += n;
 
          if (n <= file_size)
@@ -62,7 +62,6 @@ int appendFile(char *directory, char *msg, int newsockfd)
    else
    {
       printf("File error\n\n");
-
       return 2;
    }
 }
@@ -75,7 +74,7 @@ int appendBinary(char *directory, char *msg, int newsockfd)
    if (file)
    {
       fseek(file, 0, SEEK_END);
-      int file_size = ftell(file);
+      int file_size = ftell(file); // get file size
       fseek(file, 0, SEEK_SET);
 
       strcat(msg, "\n");
@@ -83,14 +82,14 @@ int appendBinary(char *directory, char *msg, int newsockfd)
       char *response = (char *)malloc(file_size + strlen(msg) + 10);
       memcpy(response, msg, strlen(msg) + 1);
 
-      int read = 0;
+      int read = 0; // file count
       while (1)
       {
-         unsigned char buff[file_size + 1];
+         unsigned char buff[file_size + 1]; // temp buff
          bzero(buff, file_size + 1);
-         int n = fread(buff, sizeof(char), file_size, file);
+         int n = fread(buff, sizeof(char), file_size, file); // read file
          if (n > 0)
-            memcpy(response + strlen(response) + read, buff, sizeof(char) * file_size + 1);
+            memcpy(response + strlen(response) + read, buff, sizeof(char) * file_size + 1); // append to response
          read += n;
          if (n <= file_size)
          {
