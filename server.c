@@ -18,7 +18,7 @@ int appendFile(char *directory, char *msg, int newsockfd)
 {
    printf("--------------------return appendBinary-----------------------------------\n");
    printf("directory : %s, msg: %s\n", directory, msg);
-   FILE *file = fopen(directory + 1, "r");
+   FILE *file = fopen(directory + 1, "r"); // read with non binary
    if (file)
    {
       fseek(file, 0, SEEK_END);
@@ -61,7 +61,8 @@ int appendFile(char *directory, char *msg, int newsockfd)
    }
    else
    {
-      printf("File error");
+      printf("File error\n\n");
+
       return 2;
    }
 }
@@ -70,7 +71,7 @@ int appendBinary(char *directory, char *msg, int newsockfd)
 {
    printf("--------------------return appendBinary-----------------------------------\n");
    printf("directory : %s, msg: %s\n", directory, msg);
-   FILE *file = fopen(directory + 1, "rb");
+   FILE *file = fopen(directory + 1, "rb"); // read with binary
    if (file)
    {
       fseek(file, 0, SEEK_END);
@@ -109,7 +110,7 @@ int appendBinary(char *directory, char *msg, int newsockfd)
    else
    {
       /* error */
-      printf("File error");
+      printf("File error\n\n");
       return 2;
    }
 }
@@ -118,6 +119,7 @@ int parseContentType(char *directory, char *msg, int newsockfd)
    printf("--------------------parseContentType-----------------------------------\n");
    if (!strcmp(directory, "/"))
    {
+      /* if default directory */
       char *new_directory = "/index.html";
       strcat(msg, "text/html\n");
       int retval = appendFile(new_directory, msg, newsockfd);
@@ -125,7 +127,7 @@ int parseContentType(char *directory, char *msg, int newsockfd)
    }
    else
    {
-      /* parse ext */
+      /* parse extension of directory */
       char *temp = strdup(directory); // strcpy(malloc(1+strlen(directory)), directory);
       temp = strtok(temp, ".");
       char *file_ext = temp;
@@ -261,6 +263,7 @@ int parseContentType(char *directory, char *msg, int newsockfd)
          free(temp);
          return retval;
       }
+      return 2;
    }
 }
 
@@ -335,16 +338,6 @@ int main(int argc, char *argv[])
 
       printf("----------------------strtok start ------------------------\n");
 
-      /*
-      GET /123123123 HTTP/1.1
-      Host: localhost:10000
-      Connection: keep-alive
-      Cache-Control: max-age=0
-      sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="100", "Google Chrome";v="100"
-      sec-ch-ua-mobile: ?0
-      sec-ch-ua-platform: "Windows"
-      Upgrade-Insecure-Requests
-      */
       char *method = strtok(buffer, " \r\n"); // not thread safe
       char *directory = strtok(NULL, " \r\n");
       char *http_version = strtok(NULL, " \r\n");
@@ -353,39 +346,18 @@ int main(int argc, char *argv[])
       printf("directory %s\n", directory);
       printf("http_version %s\n", http_version);
 
-      char notFound[1024] = "HTTP/1.1 404 Not Found\nContent-type: text/html\n\n<html>\n<body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body>\n</html>\n";
       char msg[20480] = "HTTP/1.1 200 OK\nAccept-Ranges: bytes\nContent-type:";
       char *temp_msg = strdup(msg);
 
-      parseContentType(directory, temp_msg, newsockfd);
+      char notFound[] = "HTTP/1.1 404 Not Found\nAccept-Ranges: bytes\nContent-type: text/html\n\n\n<html>\n<body>\n<h1>Not Found</h1>\n</body>\n</html>\n";
 
+      if (parseContentType(directory, temp_msg, newsockfd) == 2)
+         write(newsockfd, notFound, strlen(notFound));
       /* handle content */
       free(temp_msg);
 
       if (n < 0)
          error("ERROR writing to socket");
-
-      // write(newsockfd, msg, sizeof(msg));
-
-      // int flag = setResponseFiletype(head); // flag == 1 : textfile / 0 : binaryfile
-
-      // int error = 0; //  error == 1 : 404 / 0 : 200
-      // if (flag)
-      //    error = sendTextfile(head);
-      // else
-      //    error = sendBinaryfile(head);
-
-      // if (error)
-      // {
-      //    n = write(newsockfd, notFound, sizeof(notFound));
-      //    // if(n<0) error("ERROR writing to socket");
-      // }
-      // else
-      // {
-      //    if (flag)
-      //       n = write(newsockfd, head, sizeof(head));
-      //    // if(n<0) error("ERROR writing to socket");
-      // }
 
       close(newsockfd);
    }
